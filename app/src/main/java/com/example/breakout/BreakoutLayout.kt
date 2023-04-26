@@ -7,8 +7,9 @@ import android.graphics.Paint
 import android.os.SystemClock
 import android.widget.LinearLayout
 
-class Grid(var Rows:Int, var Col:Int)
+class BrickGrid(var Rows:Int, var Col:Int)
 {
+    var BricksList = mutableListOf<Brick>();
 }
 class Vector2(var X:Float, var Y:Float)
 {
@@ -17,18 +18,20 @@ class Vector2(var X:Float, var Y:Float)
         X = InX;
         Y = InY;
     }
-
 }
 class BreakoutLayout(context: Context) : LinearLayout(context)
 {
     private val GameObjectList = mutableListOf<GameObject>();
-    private var LastFrameTime = SystemClock.elapsedRealtime()
+    private var LastFrameTime = SystemClock.elapsedRealtime();
     private var DeltaTime:Float = 0f;
     lateinit var ScreenSize:Vector2;
-    lateinit var BrickGrid:Grid;
+    lateinit var GridOfBrick:BrickGrid;
 
-    /* Espace laissé sur les côtés de la grid de briques */
+    /* Espace laissé sur les côtés de la grid de briques en % de l'écran totale */
     private val BrickGridOffset:Vector2 = Vector2(0.05f, 0.05f);
+
+    /* Espace laissé entre chaque briques en % de l'écran totale */
+    private var BrickSpaceOffset:Vector2 = Vector2(0.005f, 0.005f);
 
     override fun onDraw(canvas: Canvas?)
     {
@@ -37,7 +40,7 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
         // Créer les game objects quand la size du layout est initialisé.
         if(!this::ScreenSize.isInitialized){
             ScreenSize = Vector2(width.toFloat(), height.toFloat());
-            SetBricksGrid(4, 4);
+            SetBricksGrid(6, 6);
 
             InitGameObjects();
         }
@@ -68,32 +71,43 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
 
     fun SetBricksGrid(RowsCnt:Int, ColCnt:Int)
     {
-        if(this::BrickGrid.isInitialized) return;
+        if(this::GridOfBrick.isInitialized) return;
 
-        BrickGrid = Grid(RowsCnt, ColCnt);
+        GridOfBrick = BrickGrid(RowsCnt, ColCnt);
 
-        var SizeToRemoveFromBrickWidthCalculation:Float = width * (BrickGridOffset.X * 2)
+        /* Calculer le width des briques */
+        var SizeToRemoveFromBrickWidthCalculation:Float = width * (BrickGridOffset.X * 2) + (BrickSpaceOffset.X * width * (GridOfBrick.Rows - 1))
         var WidthReservedToBricks:Float = width - SizeToRemoveFromBrickWidthCalculation;
-        var BrickW:Float = WidthReservedToBricks / BrickGrid.Rows;
+        var BrickW:Float = WidthReservedToBricks / GridOfBrick.Rows;
 
+        /* Calculer le height des briques */
         var BricksGridPercentHeight:Float = 0.25f;
-        var HeightReservedToBricks:Float = height * BricksGridPercentHeight;
-        var BrickH:Float = HeightReservedToBricks / BrickGrid.Col;
+        var HeightReservedToBricks:Float = (height * BricksGridPercentHeight) - BrickGridOffset.Y - (BrickSpaceOffset.Y * width * (GridOfBrick.Col - 1));
+        var BrickH:Float = HeightReservedToBricks / GridOfBrick.Col;
 
-        for(i in 0 .. BrickGrid.Rows * BrickGrid.Col)
+        /* Créer les briques */
+        for(i in 0 until GridOfBrick.Rows * GridOfBrick.Col)
         {
-            val GridX = i % BrickGrid.Rows;
-            val GridY = i / BrickGrid.Rows;
+            val GridX = i % GridOfBrick.Rows;
+            val GridY = i / GridOfBrick.Rows;
+
+            val BrickX = GridX * BrickW + BrickGridOffset.X * width + (GridX * (BrickSpaceOffset.X * width));
+            val BrickY = GridY * BrickH + BrickGridOffset.Y * height + (GridY * (BrickSpaceOffset.Y * height));
 
             val NewBrick:GameObject = Brick(
-                GridX * BrickW + BrickGridOffset.X * width,
-                GridY * BrickH + BrickGridOffset.Y * height,
+                BrickX,
+                BrickY,
                 BrickW,
                 BrickH,
                 ScreenSize
             );
 
+            GridOfBrick.BricksList.add(NewBrick as Brick);
             GameObjectList.add(NewBrick);
         }
+    }
+
+    fun GetBrickIndex()
+    {
     }
 }
