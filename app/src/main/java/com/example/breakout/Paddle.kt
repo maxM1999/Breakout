@@ -4,7 +4,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 
-class Paddle(X:Float, Y:Float, W:Float, H:Float):GameObject(X, Y, W, H)
+class Paddle(X:Float, Y:Float, W:Float, H:Float, ScreenSize:Vector2):GameObject(X,Y, W, H, ScreenSize)
 {
     companion object
     {
@@ -33,12 +33,6 @@ class Paddle(X:Float, Y:Float, W:Float, H:Float):GameObject(X, Y, W, H)
         }
 
         UpdateRect();
-    }
-
-    override fun Draw(canvas: Canvas?) {
-        super.Draw(canvas)
-
-        canvas?.drawRect(Rect, paint)
     }
 
     /* Retourne la direction que la paddle doit avoir pour atteindre le point touché par le joueur */
@@ -73,9 +67,9 @@ class Paddle(X:Float, Y:Float, W:Float, H:Float):GameObject(X, Y, W, H)
                 {
                     X = TouchX - (W / 2);
                 }
-                else if(X + W > ScreenX)
+                if(X + W > ScreenSize.X)
                 {
-                    X = ScreenX - W;
+                    X = ScreenSize.X - W;
                 }
             }
             LEFT ->
@@ -83,6 +77,10 @@ class Paddle(X:Float, Y:Float, W:Float, H:Float):GameObject(X, Y, W, H)
                 if(CurrPosX < TouchX)
                 {
                     X = TouchX - (W / 2);
+                }
+                if(X < 0f)
+                {
+                    X = 0f;
                 }
             }
         }

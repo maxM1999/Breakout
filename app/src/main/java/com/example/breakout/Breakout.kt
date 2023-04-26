@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 class Breakout() : AppCompatActivity()
 {
     lateinit var breakoutLayout:BreakoutLayout;
-    lateinit var linearLayout:LinearLayout;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,9 +20,8 @@ class Breakout() : AppCompatActivity()
         val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
         breakoutLayout.layoutParams = params;
 
-        setContentView(breakoutLayout)
+        setContentView(breakoutLayout, params)
     }
-
     override fun onTouchEvent(event: MotionEvent?): Boolean
     {
         InputManager.getInstance().handleTouchEvent(event)
