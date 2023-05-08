@@ -5,11 +5,16 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.os.Handler
+
 import android.os.SystemClock
-import android.transition.Explode
+
+import android.view.Gravity
+import android.view.MotionEvent
 import android.view.animation.LinearInterpolator
+import android.widget.Button
 import android.widget.LinearLayout
-import androidx.core.view.forEach
+
 
 class BrickGrid(var Rows:Int, var Col:Int)
 {
@@ -34,14 +39,92 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
     lateinit var GridOfBrick:BrickGrid;
     lateinit var MyPaddle:Paddle;
     lateinit var MyBall:Ball;
+    lateinit var LeftButton: Button;
+    lateinit var RightButton: Button;
+
+    lateinit var ButtonLayout:LinearLayout;
+
 
     val shake = ObjectAnimator.ofFloat(this, "translationX", -10f, 10f);
 
+
+    private val handler = Handler();
+
+    private val runnable = object : Runnable {
+        override fun run() {
+            // Appeler la fonction souhaitée ici
+            AddBrickRow();
+            handler.postDelayed(this, 40000) // Répéter toutes les 40 secondes (40000 millisecondes)
+        }
+    }
+
     init
     {
+        handler.postDelayed(runnable, 40000)
         shake.duration = 50
         shake.repeatCount = 5
         shake.interpolator = LinearInterpolator()
+
+        ButtonLayout = LinearLayout(context);
+        ButtonLayout.orientation = LinearLayout.HORIZONTAL
+        val layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        layoutParams.gravity = Gravity.BOTTOM;
+
+        ButtonLayout.layoutParams = layoutParams;
+
+        val buttonLayoutParams = LinearLayout.LayoutParams(
+            0,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            1.0f
+        )
+
+        LeftButton = Button(context)
+        LeftButton.text = "<---";
+        LeftButton.layoutParams = buttonLayoutParams
+        LeftButton.width /= 2;
+        LeftButton.gravity = Gravity.CENTER;
+        LeftButton.setBackgroundColor(Color.TRANSPARENT)
+        LeftButton.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    OnLeftButtonClick() // Fonction lorsqu'il est appuyé
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    OnLeftButtonReleased() // Fonction lorsqu'il est relâché
+                    true
+                }
+                else -> false
+            }
+        }
+
+        RightButton = Button(context)
+        RightButton.text = "--->";
+        RightButton.layoutParams = buttonLayoutParams;
+        RightButton.width /= 2;
+        RightButton.gravity = Gravity.CENTER;
+        RightButton.setBackgroundColor(Color.TRANSPARENT)
+        RightButton.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    OnRightButtonClick() // Fonction lorsqu'il est appuyé
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    OnRightButtonReleased() // Fonction lorsqu'il est relâché
+                    true
+                }
+                else -> false
+            }
+        }
+
+        ButtonLayout.addView(LeftButton)
+        ButtonLayout.addView(RightButton)
+
+        addView(ButtonLayout, childCount)
     }
 
 
@@ -51,6 +134,11 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
     /* Espace laissé entre chaque briques en % de l'écran totale */
     private var BrickSpaceOffset:Vector2 = Vector2(0.005f, 0.005f);
 
+    lateinit var BrickSize:Vector2;
+
+
+
+
     override fun onDraw(canvas: Canvas?)
     {
         super.onDraw(canvas)
@@ -58,7 +146,7 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
         // Créer les game objects quand la size du layout est initialisé.
         if(!this::ScreenSize.isInitialized){
             ScreenSize = Vector2(width.toFloat(), height.toFloat());
-            SetBricksGrid(3, 3);
+            SetBricksGrid(6, 6);
 
             InitGameObjects();
         }
@@ -114,9 +202,10 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
 
         /* Calculer le width des briques */
         var BrickW:Float = CalculateBrickWidth();
-
-        /* Calculer le height des briques */
-        var BrickH:Float = CalculateBrickHeight();
+        if(this::BrickSize.isInitialized == false)
+        {
+            BrickSize = Vector2(BrickW, 100f);
+        }
 
         /* Créer les briques */
         for(i in 0 until GridOfBrick.Rows * GridOfBrick.Col)
@@ -124,14 +213,45 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
             val GridX = i % GridOfBrick.Rows;
             val GridY = i / GridOfBrick.Rows;
 
-            val BrickX = GridX * BrickW + BrickGridOffset.X * width + (GridX * (BrickSpaceOffset.X * width));
-            val BrickY = GridY * BrickH + BrickGridOffset.Y * height + (GridY * (BrickSpaceOffset.Y * height));
+            val BrickX = GridX * BrickSize.X + BrickGridOffset.X * width + (GridX * (BrickSpaceOffset.X * width));
+            val BrickY = GridY * BrickSize.Y + BrickGridOffset.Y * height + (GridY * (BrickSpaceOffset.Y * height));
 
             val NewBrick:GameObject = Brick(
                 BrickX,
                 BrickY,
-                BrickW,
-                BrickH,
+                BrickSize.X,
+                BrickSize.Y,
+                ScreenSize
+            );
+
+            GridOfBrick.BricksList.add(NewBrick as Brick);
+            GameObjectList.add(NewBrick);
+        }
+    }
+
+    fun AddBrickRow()
+    {
+        for(i in 0 until GridOfBrick.BricksList.size)
+        {
+            var CurrBrick = GridOfBrick.BricksList[i];
+            var CurrY = CurrBrick.GetRect().top;
+            var CurrX = CurrBrick.GetRect().left;
+
+            CurrBrick.SetPos(Vector2(CurrX, CurrY + BrickSize.Y + (BrickSpaceOffset.Y * height)))
+        }
+
+        for(i in 0 until GridOfBrick.Col)
+        {
+            val GridX = i % GridOfBrick.Rows;
+            val GridY = i / GridOfBrick.Rows;
+            val BrickX = GridX * BrickSize.X + BrickGridOffset.X * width + (GridX * (BrickSpaceOffset.X * width));
+            val BrickY = GridY * BrickSize.Y + BrickGridOffset.Y * height + (GridY * (BrickSpaceOffset.Y * height));
+
+            val NewBrick:GameObject = Brick(
+                BrickX,
+                BrickY,
+                BrickSize.X,
+                BrickSize.Y,
                 ScreenSize
             );
 
@@ -147,36 +267,47 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
         return WidthReservedToBricks / GridOfBrick.Rows;
     }
 
-    fun CalculateBrickHeight():Float
-    {
-        var BricksGridPercentHeight:Float = 0.25f;
-        var HeightReservedToBricks:Float = (height * BricksGridPercentHeight) - BrickGridOffset.Y - (BrickSpaceOffset.Y * width * (GridOfBrick.Col - 1));
-        return HeightReservedToBricks / GridOfBrick.Col;
-    }
-
     fun CheckCollisions()
     {
         var CollidedBricks:List<Brick> = CollisionManager.GetCollidingBricks(MyBall, GridOfBrick.BricksList);
+
+        val BallX:Float = MyBall.GetRect().left;
+        val BallY:Float = MyBall.GetRect().top;
+        val BallW:Float = MyBall.GetRect().width();
+        val BallH = MyBall.GetRect().height();
 
         if(CollidedBricks.size > 0)
         {
             shake.start();
             val BrickTop:Float = CollidedBricks[0].GetRect().top;
             val BrickBot:Float = CollidedBricks[0].GetRect().top + CollidedBricks[0].GetRect().height();
-            val BallX:Float = MyBall.GetRect().left;
+            val BrickLeft:Float = CollidedBricks[0].GetRect().left;
+            val BrickRight:Float = CollidedBricks[0].GetRect().left + CollidedBricks[0].GetRect().width()
 
-            if(MyBall.GetDir().Y == 1f)
+            // La balle collisionne sur la gauche de la brique
+            if(BallX < BrickLeft && BallY > BrickTop && BallY < BrickBot)
             {
-                MyBall.SetPos(Vector2(BallX, BrickTop));
+                MyBall.ChangeDir(true, false);
+                MyBall.SetPos(Vector2(BrickLeft - BallW, BallY));
             }
-            else
+            // La balle collisionne sur la droite de la brique
+            else if(BallX > BrickRight && BallY > BrickTop && BallY < BrickBot)
+            {
+                MyBall.ChangeDir(true, false);
+                MyBall.SetPos(Vector2(BrickRight, BallY));
+            }
+            // La balle collisionne sur le dessus de la brique
+            else if(MyBall.GetDir().Y == 1f)
+            {
+                MyBall.SetPos(Vector2(BallX, BrickTop - BallH));
+                MyBall.ChangeDir(false, true);
+            }
+            else // La balle collisionne en dessous de la brique
             {
                 MyBall.SetPos(Vector2(BallX, BrickBot));
+                MyBall.ChangeDir(false, true);
             }
-
-            MyBall.ChangeDir(false, true);
         }
-
 
         CollidedBricks.forEach { GameObjectList.remove(it); GridOfBrick.BricksList.remove(it); AddParticles(it); }
 
@@ -184,8 +315,6 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
         {
             val PaddleTop = MyPaddle.GetRect().top;
             val PaddleBot = MyPaddle.GetRect().top + MyPaddle.GetRect().height();
-            val BallX:Float = MyBall.GetRect().left;
-            val BallH:Float = MyBall.GetRect().height();
 
             if(MyBall.GetDir().Y == 1f)
             {
@@ -220,5 +349,29 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
             }
             ParticlesList.add(Particle(brick.GetRect().centerX(), brick.GetRect().centerY(), ParticleVx, ParticleVy, 10f));
         }
+    }
+
+    fun OnLeftButtonClick():Boolean
+    {
+        InputManager.getInstance().SetLeftButtonClicked(true);
+        return false;
+    }
+
+    fun OnLeftButtonReleased():Boolean
+    {
+        InputManager.getInstance().SetLeftButtonClicked(false);
+        return false;
+    }
+
+    fun OnRightButtonClick():Boolean
+    {
+        InputManager.getInstance().SetRightButtonClicked(true);
+        return false;
+    }
+
+    fun OnRightButtonReleased():Boolean
+    {
+        InputManager.getInstance().SetRightButtonClicked(false);
+        return false;
     }
 }

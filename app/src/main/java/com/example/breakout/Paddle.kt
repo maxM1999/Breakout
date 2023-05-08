@@ -3,6 +3,7 @@ package com.example.breakout
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.renderscript.ScriptGroup.Input
 
 class Paddle(X:Float, Y:Float, W:Float, H:Float, ScreenSize:Vector2):GameObject(X,Y, W, H, ScreenSize)
 {
@@ -14,6 +15,8 @@ class Paddle(X:Float, Y:Float, W:Float, H:Float, ScreenSize:Vector2):GameObject(
     }
 
     private var Speed:Float = 5000f;
+    private var ButtonSpeed:Float = 2000f; // Vitesse lorsque bougée par les bouttons
+    private var SpeedForScreenRotation:Float = 700f;// Vitesse lorsque bougée par rotation de l'écran
     private var Dir:Int = 0
 
     init
@@ -30,6 +33,18 @@ class Paddle(X:Float, Y:Float, W:Float, H:Float, ScreenSize:Vector2):GameObject(
             Dir = GetDirectionTowardTouchX(InputManager.getInstance().TouchX);
             X += Dir * Speed * DeltaTime;
             AdjustPosition(InputManager.getInstance().TouchX)
+        }
+        else if(InputManager.getInstance().IsButtonClicked())
+        {
+            Dir = InputManager.getInstance().GetDirX();
+            X += Dir * ButtonSpeed * DeltaTime;
+            AdjustPositionFromButton();
+        }
+        else if(InputManager.getInstance().IsScreenRotated)
+        {
+            Dir = InputManager.getInstance().SensorDirX;
+            X += Dir * SpeedForScreenRotation * DeltaTime;
+            AdjustPositionFromButton();
         }
 
         UpdateRect();
@@ -78,6 +93,30 @@ class Paddle(X:Float, Y:Float, W:Float, H:Float, ScreenSize:Vector2):GameObject(
                 {
                     X = TouchX - (W / 2);
                 }
+                if(X < 0f)
+                {
+                    X = 0f;
+                }
+            }
+        }
+    }
+
+    /* Si après son déplacement la paddle dépasse l'écran, la ramener ou elle doit être. */
+    private fun AdjustPositionFromButton()
+    {
+        var CurrPosX = X + (W / 2);
+
+        when(Dir)
+        {
+            RIGHT ->
+            {
+                if(X + W > ScreenSize.X)
+                {
+                    X = ScreenSize.X - W;
+                }
+            }
+            LEFT ->
+            {
                 if(X < 0f)
                 {
                     X = 0f;

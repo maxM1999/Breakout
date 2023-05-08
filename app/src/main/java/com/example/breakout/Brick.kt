@@ -46,4 +46,12 @@ class Brick(X:Float, Y:Float, W:Float, H:Float, ScreenSize:Vector2) : GameObject
         paint.style = Paint.Style.FILL;
 
     }
+
+    fun SetPos(NewPos:Vector2)
+    {
+        X = NewPos.X;
+        Y = NewPos.Y;
+
+        UpdateRect();
+    }
 }

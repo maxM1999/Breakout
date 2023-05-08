@@ -1,5 +1,11 @@
 package com.example.breakout
 
+
+import android.drm.DrmStore.RightsStatus
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.view.MotionEvent
 
 class InputManager private constructor()
@@ -24,9 +30,16 @@ class InputManager private constructor()
     var TouchY:Float = 0f;
     var DirX:Int = 0;
     var DirY:Int = 0;
+    var SensorDirX = 0;
+    var LeftButtonClicked:Boolean = false;
+    var RightButtonClicked:Boolean = false;
+    var IsScreenRotated:Boolean = false;
 
     fun handleTouchEvent(event: MotionEvent?)
     {
+        // Ne rien mettre à jour si un des deux boutons d'inputs est appuyé.
+        if(LeftButtonClicked == true or RightButtonClicked == true) return;
+
         when (event?.actionMasked)
         {
             MotionEvent.ACTION_DOWN ->
@@ -70,5 +83,59 @@ class InputManager private constructor()
         {
             DirY = 1;
         }
+    }
+
+    fun SetLeftButtonClicked(State:Boolean)
+    {
+        LeftButtonClicked = State;
+        if(State == false)
+        {
+            if(RightButtonClicked == false)
+            {
+                if(IsTouched == false)
+                {
+                    DirX = 0;
+                }
+            }
+        }
+        else
+        {
+            DirX = -1;
+        }
+    }
+
+    fun SetRightButtonClicked(State:Boolean)
+    {
+        RightButtonClicked = State;
+        if(State == false)
+        {
+            if(LeftButtonClicked == false)
+            {
+                if(IsTouched == false)
+                {
+                    DirX = 0;
+                }
+            }
+        }
+        else
+        {
+            DirX = 1;
+        }
+    }
+
+    fun IsButtonClicked():Boolean
+    {
+        if(LeftButtonClicked or RightButtonClicked) return true;
+        return false;
+    }
+
+    fun GetDirX():Int
+    {
+        return DirX;
+    }
+
+    fun SetDirRotated(State: Boolean)
+    {
+        IsScreenRotated = State;
     }
 }
