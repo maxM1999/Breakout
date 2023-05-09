@@ -2,6 +2,7 @@ package com.example.breakout
 
 import android.animation.ObjectAnimator
 import android.content.Context
+import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -14,6 +15,8 @@ import android.view.MotionEvent
 import android.view.animation.LinearInterpolator
 import android.widget.Button
 import android.widget.LinearLayout
+import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat.startActivity
 
 
 class BrickGrid(var Rows:Int, var Col:Int)
@@ -41,8 +44,9 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
     lateinit var MyBall:Ball;
     lateinit var LeftButton: Button;
     lateinit var RightButton: Button;
-
     lateinit var ButtonLayout:LinearLayout;
+    lateinit var BreakoutParent:Breakout;
+    private var ShouldUpdate:Boolean = true;
 
 
     val shake = ObjectAnimator.ofFloat(this, "translationX", -10f, 10f);
@@ -153,8 +157,11 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
 
         UpdateDeltaTime();
 
-        // Update gameObjects
-        GameObjectList.forEach { it.Update(DeltaTime) }
+        if(ShouldUpdate)
+        {
+            // Update gameObjects
+            GameObjectList.forEach { it.Update(DeltaTime) }
+        }
 
         ParticlesList.forEach {it.Update(DeltaTime)}
 
@@ -163,7 +170,11 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
 
         ParticlesList.forEach { it.Draw(canvas) }
 
-        CheckCollisions();
+        if(ShouldUpdate)
+        {
+            CheckCollisions();
+        }
+
 
         val ParticlesToDel = mutableListOf<Particle>();
         ParticlesList.forEach {
@@ -191,6 +202,7 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
         GameObjectList.add(MyPaddle);
 
         MyBall = Ball(ScreenSize.X / 2, ScreenSize.Y * 0.73f, 75f, 75f, ScreenSize, 500f);
+        MyBall.Parent = this;
         GameObjectList.add(MyBall);
     }
 
@@ -373,5 +385,35 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
     {
         InputManager.getInstance().SetRightButtonClicked(false);
         return false;
+    }
+
+    fun ShowPopup(win:Boolean)
+    {
+        val Builder = AlertDialog.Builder(context)
+        Builder.setMessage("Recommencer?")
+
+        Builder.setPositiveButton("Recommencer") { dialog, which ->
+            BreakoutParent.RestartBreakout();
+        }
+
+        Builder.setNegativeButton("Quitter") { dialog, which ->
+            System.exit(0);
+        }
+
+        val dialog = Builder.create()
+        dialog.show()
+        if(!win)
+        {
+            Builder.setTitle("Vous avez perdu!")
+        }
+        else
+        {
+            Builder.setTitle("Vous avez gagné!")
+        }
+    }
+
+    fun SetShouldUpdate(State:Boolean)
+    {
+        ShouldUpdate = State;
     }
 }

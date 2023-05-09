@@ -1,6 +1,7 @@
 package com.example.breakout
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Paint
 import android.hardware.Sensor
@@ -23,6 +24,7 @@ class Breakout() : AppCompatActivity(), SensorEventListener
         super.onCreate(savedInstanceState)
 
         breakoutLayout = BreakoutLayout(this);
+        breakoutLayout.BreakoutParent = this;
         breakoutLayout.setBackgroundColor(Color.WHITE);
         val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
         breakoutLayout.layoutParams = params;
@@ -68,5 +70,11 @@ class Breakout() : AppCompatActivity(), SensorEventListener
     }
 
     override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+    }
+
+    fun RestartBreakout()
+    {
+        val intent = Intent(this, Breakout::class.java)
+        startActivity(intent);
     }
 }

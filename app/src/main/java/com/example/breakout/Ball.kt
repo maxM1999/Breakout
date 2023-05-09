@@ -2,6 +2,7 @@ package com.example.breakout
 
 import android.graphics.Color
 import android.graphics.Paint
+
 import java.util.Vector
 
 class Ball(X:Float, Y:Float, W:Float, H:Float, ScreenSize:Vector2, private val Speed:Float):GameObject(X,Y, W, H, ScreenSize)
@@ -45,6 +46,8 @@ class Ball(X:Float, Y:Float, W:Float, H:Float, ScreenSize:Vector2, private val S
             }
             else
             {
+                Parent.ShowPopup(false);
+                Parent.SetShouldUpdate(false);
                 Y = ScreenSize.Y - H;
             }
         }

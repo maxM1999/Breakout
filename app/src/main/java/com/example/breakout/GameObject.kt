@@ -8,6 +8,7 @@ open class GameObject(protected var X:Float, protected var Y:Float, protected va
 {
     protected val Rect = RectF(X, Y, X + W, Y + H);
     protected val paint = Paint();
+    lateinit var Parent:BreakoutLayout;
 
     open fun Update(DeltaTime:Float)
     {}
