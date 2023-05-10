@@ -16,6 +16,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var ButtonLayout:LinearLayout;
     private lateinit var StartBtn: Button;
+    private lateinit var EndBtn: Button;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,17 +34,30 @@ class MainActivity : AppCompatActivity() {
             LinearLayout.LayoutParams.MATCH_PARENT,
         )
 
+        val buttonLayoutParams = LinearLayout.LayoutParams(
+            LayoutParams.MATCH_PARENT, 0, 1f
+        )
+
         ButtonLayout.layoutParams = params;
 
         StartBtn = Button(this);
         StartBtn.text = "Start";
         StartBtn.gravity = Gravity.CENTER_HORIZONTAL;
 
-        StartBtn.layoutParams = params;
+        StartBtn.layoutParams = buttonLayoutParams;
         ButtonLayout.addView(StartBtn);
         StartBtn.setOnClickListener {
             OnStartBtnClicked();
         }
+
+        EndBtn = Button(this);
+        EndBtn.text = "Quit";
+        EndBtn.gravity = Gravity.CENTER_HORIZONTAL;
+        EndBtn.layoutParams = buttonLayoutParams;
+        EndBtn.setOnClickListener {
+            finishAffinity();
+        }
+        ButtonLayout.addView(EndBtn);
 
         setContentView(ButtonLayout);
 
