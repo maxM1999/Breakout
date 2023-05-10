@@ -1,16 +1,14 @@
 package com.example.breakout
-
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.Paint
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.view.MotionEvent
-import android.widget.Button
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 
@@ -19,15 +17,24 @@ class Breakout() : AppCompatActivity(), SensorEventListener
     lateinit var breakoutLayout:BreakoutLayout;
     private var sensorManager: SensorManager? = null
     private var accelerometer: Sensor? = null
+    lateinit private var Bmp:Bitmap;
+
+    external fun generateQRCode(): IntArray
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val QrCodeData:IntArray = generateQRCode();
+        val W = Math.sqrt(QrCodeData.size.toDouble()).toInt();
+        val Bmp = Bitmap.createBitmap(W, W, Bitmap.Config.RGB_565);
+        Bmp.setPixels(QrCodeData, 0, W, 0, 0, W, W)
 
         breakoutLayout = BreakoutLayout(this);
         breakoutLayout.BreakoutParent = this;
         breakoutLayout.setBackgroundColor(Color.WHITE);
         val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT)
         breakoutLayout.layoutParams = params;
+        breakoutLayout.CodeBitmap = Bmp;
 
         setContentView(breakoutLayout, params)
 

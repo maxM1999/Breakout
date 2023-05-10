@@ -1,14 +1,9 @@
 package com.example.breakout
 
 
-import android.animation.ObjectAnimator
-import android.animation.PropertyValuesHolder
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.PorterDuff
-import android.view.View
-import android.view.animation.AccelerateInterpolator
 
 class Particle( var X: Float, var Y: Float, var Vx: Float, var Vy: Float, var size: Float)
 {

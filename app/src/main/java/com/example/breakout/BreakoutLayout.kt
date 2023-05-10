@@ -2,6 +2,7 @@ package com.example.breakout
 
 import android.animation.ObjectAnimator
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.os.Handler
@@ -10,6 +11,8 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.animation.LinearInterpolator
 import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 
@@ -44,6 +47,7 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
     private var ShouldUpdate:Boolean = true;
     val shake = ObjectAnimator.ofFloat(this, "translationX", -10f, 10f);
     private val handler = Handler();
+    lateinit var CodeBitmap:Bitmap;
 
     private val runnable = object : Runnable
     {
@@ -182,6 +186,12 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
         }
 
         ParticlesToDel.forEach { ParticlesList.remove(it) }
+
+        // Victoire
+        if(GridOfBrick.BricksList.size == 0)
+        {
+            ShowPopup(true);
+        }
 
         invalidate();
     }
@@ -389,8 +399,17 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
 
     fun ShowPopup(win:Boolean)
     {
+        val PopupImage = ImageView(BreakoutParent)
+        PopupImage.setImageBitmap(CodeBitmap);
+
+        // Créer un frame layout pour agrendir l'image
+        val frameLayout = FrameLayout(BreakoutParent);
+        val layoutParams = FrameLayout.LayoutParams(500, 500, Gravity.CENTER);
+        frameLayout.addView(PopupImage, layoutParams);
+
         val Builder = AlertDialog.Builder(context)
         Builder.setMessage("Recommencer?")
+        Builder.setView(frameLayout)
 
         Builder.setPositiveButton("Recommencer") { dialog, which ->
             BreakoutParent.RestartBreakout();
@@ -400,8 +419,6 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
             System.exit(0);
         }
 
-        val dialog = Builder.create()
-        dialog.show()
         if(!win)
         {
             Builder.setTitle("Vous avez perdu!")
@@ -410,6 +427,9 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
         {
             Builder.setTitle("Vous avez gagné!")
         }
+
+        val dialog = Builder.create()
+        dialog.show()
     }
 
     fun SetShouldUpdate(State:Boolean)
