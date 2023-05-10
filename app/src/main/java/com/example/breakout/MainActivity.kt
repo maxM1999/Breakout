@@ -40,10 +40,10 @@ class MainActivity : AppCompatActivity() {
 
         ButtonLayout.layoutParams = params;
 
+        // Créer les boutons du menu et les ajouter au layout
         StartBtn = Button(this);
         StartBtn.text = "Start";
         StartBtn.gravity = Gravity.CENTER_HORIZONTAL;
-
         StartBtn.layoutParams = buttonLayoutParams;
         ButtonLayout.addView(StartBtn);
         StartBtn.setOnClickListener {

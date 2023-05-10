@@ -14,7 +14,7 @@ class Paddle(X:Float, Y:Float, W:Float, H:Float, ScreenSize:Vector2):GameObject(
         const val IDLE = 0
     }
 
-    private var Speed:Float = 5000f;
+    private var Speed:Float = 5000f; // Vitesse lorsque bougée par le toucher
     private var ButtonSpeed:Float = 2000f; // Vitesse lorsque bougée par les bouttons
     private var SpeedForScreenRotation:Float = 700f;// Vitesse lorsque bougée par rotation de l'écran
     private var Dir:Int = 0

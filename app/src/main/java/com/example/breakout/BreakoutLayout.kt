@@ -2,21 +2,16 @@ package com.example.breakout
 
 import android.animation.ObjectAnimator
 import android.content.Context
-import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.Paint
 import android.os.Handler
-
 import android.os.SystemClock
-
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.animation.LinearInterpolator
 import android.widget.Button
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat.startActivity
 
 
 class BrickGrid(var Rows:Int, var Col:Int)
@@ -39,46 +34,48 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
     private var LastFrameTime = SystemClock.elapsedRealtime();
     private var DeltaTime:Float = 0f;
     lateinit var ScreenSize:Vector2;
-    lateinit var GridOfBrick:BrickGrid;
+    lateinit var GridOfBrick:BrickGrid; // Grille contenant une liste de brick
     lateinit var MyPaddle:Paddle;
     lateinit var MyBall:Ball;
-    lateinit var LeftButton: Button;
-    lateinit var RightButton: Button;
-    lateinit var ButtonLayout:LinearLayout;
-    lateinit var BreakoutParent:Breakout;
+    var LeftButton: Button; // Bouton pour bouger vers la gauche
+    var RightButton: Button; // Bouton pour bouger vers la droite
+    var ButtonLayout:LinearLayout; // Layout qui contient les boutons pour bougewr la paddle
+    lateinit var BreakoutParent:Breakout; // Activité Breakout parent de ce layout
     private var ShouldUpdate:Boolean = true;
-
-
     val shake = ObjectAnimator.ofFloat(this, "translationX", -10f, 10f);
-
-
     private val handler = Handler();
 
-    private val runnable = object : Runnable {
-        override fun run() {
-            // Appeler la fonction souhaitée ici
+    private val runnable = object : Runnable
+    {
+        override fun run()
+        {
+            // Ajouter une rangée de brick tout les 40 secondes
             AddBrickRow();
-            handler.postDelayed(this, 40000) // Répéter toutes les 40 secondes (40000 millisecondes)
+            handler.postDelayed(this, 40000);
         }
     }
 
     init
     {
+        // Démarrer le timer pour l'ajout des rangées de brick
         handler.postDelayed(runnable, 40000)
+
+        // Config pour le shake de l'écran
         shake.duration = 50
         shake.repeatCount = 5
         shake.interpolator = LinearInterpolator()
 
+        // Créer le layout qui contient les boutons pour bouger la paddle
         ButtonLayout = LinearLayout(context);
         ButtonLayout.orientation = LinearLayout.HORIZONTAL
         val layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        );
         layoutParams.gravity = Gravity.BOTTOM;
-
         ButtonLayout.layoutParams = layoutParams;
 
+        // Créer les boutons pour bouger la paddle
         val buttonLayoutParams = LinearLayout.LayoutParams(
             0,
             LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -142,7 +139,6 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
 
 
 
-
     override fun onDraw(canvas: Canvas?)
     {
         super.onDraw(canvas)
@@ -176,6 +172,7 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
         }
 
 
+        // Supprimer les particles qui doivent l'être selon leur LifeTime
         val ParticlesToDel = mutableListOf<Particle>();
         ParticlesList.forEach {
             if(it.GetLifeTime() <= 0f)
@@ -243,6 +240,7 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
 
     fun AddBrickRow()
     {
+        // Augmenter la pos y de chaque brick existantes
         for(i in 0 until GridOfBrick.BricksList.size)
         {
             var CurrBrick = GridOfBrick.BricksList[i];
@@ -252,6 +250,7 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
             CurrBrick.SetPos(Vector2(CurrX, CurrY + BrickSize.Y + (BrickSpaceOffset.Y * height)))
         }
 
+        // Créer la nouvelle rangée de brick
         for(i in 0 until GridOfBrick.Col)
         {
             val GridX = i % GridOfBrick.Rows;
@@ -290,7 +289,8 @@ class BreakoutLayout(context: Context) : LinearLayout(context)
 
         if(CollidedBricks.size > 0)
         {
-            shake.start();
+            shake.start(); // Shaker l'écran lors d'une collision entre la balle et une brick
+
             val BrickTop:Float = CollidedBricks[0].GetRect().top;
             val BrickBot:Float = CollidedBricks[0].GetRect().top + CollidedBricks[0].GetRect().height();
             val BrickLeft:Float = CollidedBricks[0].GetRect().left;
